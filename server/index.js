@@ -13,7 +13,13 @@ const port = process.env.PORT || 3001;
 app.use(cors());
 app.use(bodyParser.json());
 // Serve static files from the React client build
-app.use(express.static(path.join(__dirname, '../client/dist')));
+app.use(express.static(path.join(__dirname, '../client/dist'), {
+    setHeaders: (res, path) => {
+        if (path.endsWith('.html')) {
+            res.setHeader('Content-Type', 'text/html; charset=utf-8');
+        }
+    }
+}));
 
 // Initialize Anthropic client
 // Note: The API key is retrieved from process.env.ANTHROPIC_API_KEY
@@ -605,5 +611,6 @@ app.listen(port, () => {
 
 // Handle React routing, return all requests to React app
 app.get('*', (req, res) => {
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
     res.sendFile(path.join(__dirname, '../client/dist/index.html'));
 });
