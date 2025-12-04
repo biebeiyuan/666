@@ -624,10 +624,14 @@ input:focus {
   .options-grid {
     display: flex;
     flex-direction: column;
-    gap: 0.6rem;
-    max-height: 35vh;
+    gap: 0.8rem;
+    max-height: 50vh;
+    /* 增加可视高度，因为移除了输入框 */
     overflow-y: auto;
-    padding-bottom: 5rem;
+    padding-bottom: 6rem;
+    /* 确保底部有足够空间，防止被提示按钮遮挡 */
+    padding-right: 0.5rem;
+    /* 防止滚动条遮挡内容 */
   }
 
   .options-grid button {

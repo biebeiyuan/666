@@ -231,7 +231,6 @@ function App() {
                 <InputArea
                   options={gameState.options}
                   onOptionSelect={handleAction}
-                  onCustomAction={handleAction}
                   disabled={gameState.loading}
                 />
               </motion.div>
