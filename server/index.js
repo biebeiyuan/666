@@ -35,7 +35,8 @@ const anthropic = new Anthropic({
 });
 
 // Allow configurable model name for proxy compatibility
-const MODEL_NAME = process.env.CLAUDE_MODEL || "claude-3-5-sonnet";
+// const MODEL_NAME = process.env.CLAUDE_MODEL || "claude-3-5-sonnet";
+const MODEL_NAME = "claude-haiku-4-5-20251001"; // User specified custom model
 console.log('Debug: Using model:', MODEL_NAME);
 
 // Health check endpoint
@@ -120,7 +121,7 @@ app.post('/api/generate-scenario', async (req, res) => {
         } else if (theme === 'tomb_raiding') {
             themeContext = `
         世界观参考《鬼吹灯》、《盗墓笔记》。
-        背景：深埋地下的古代陵墓（如“精绝古城”、“秦岭神树”）。
+        背景：深埋地下的古代陵墓（如"精绝古城"、"秦岭神树"）。
         核心元素：机关陷阱、粽子（僵尸）、风水秘术、摸金校尉、冥器。
         玩家角色：经验丰富的摸金校尉，或者是考古队的向导。
         特殊设定：
@@ -131,6 +132,37 @@ app.post('/api/generate-scenario', async (req, res) => {
             additionalJsonFields = `
       "inventory": ["洛阳铲", "黑驴蹄子", "蜡烛", "糯米"],
       "status": "状态良好"`;
+        } else if (theme === 'rule_horror') {
+            themeContext = `
+        世界观参考规则类怪谈、SCP基金会、后室(Backrooms)等。
+        背景：一个看似普通但充满诡异规则的封闭空间（如：深夜便利店、废弃医院、诡异公寓、末班地铁、神秘酒店等）。
+        
+        核心元素：
+        - 必须遵守的神秘规则（违反则死）
+        - 看似正常实则扭曲的环境
+        - 伪装成普通人的"它们"
+        - 无法解释的超自然现象
+        - 时间/空间异常
+        
+        玩家角色：误入异常空间的普通人。
+        
+        特殊设定：
+        1. **规则系统**：游戏开始时，玩家会收到一份规则清单（3-5条）。这些规则必须严格遵守。
+           规则示例：
+           - "不要与穿红衣服的人说话"
+           - "听到敲门声，数到10再开门"
+           - "凌晨3点必须躲在被子里"
+           - "不要相信镜子里的自己"
+           - "如果有人问你的名字，告诉它错误的名字"
+        2. 玩家的目标是在遵守规则的前提下找到逃离的方法。
+        3. **道具系统**：场景中可能包含线索物品（如：残破的日记、神秘的符号、上一个受害者的遗物）。
+        4. 氛围要阴森诡异，强调心理恐惧和规则悬念。
+        5. 在description中必须包含3-5条清晰的规则，格式如：【规则1】xxx【规则2】xxx
+        `;
+            additionalJsonFields = `
+      "inventory": ["手机（电量47%）", "钥匙"],
+      "hints": ["【规则1】不要与穿红衣服的人说话", "【规则2】听到敲门声，数到10再开门", "【规则3】凌晨3点必须躲在被子里"],
+      "status": "心跳加速"`;
         } else {
             themeContext = `主题：${theme || '神秘古宅'}`;
         }
@@ -145,7 +177,7 @@ app.post('/api/generate-scenario', async (req, res) => {
     {
       "title": "场景标题",
       "description": "房间或情境的开场描述（请使用生动的中文描述，极具沉浸感，符合上述世界观）",
-      "initial_options": ["选项1", "选项2", "选项3"]${theme === 'path_to_nowhere' ? ',' + additionalJsonFields : ''}
+      "initial_options": ["选项1", "选项2", "选项3"]${theme === 'path_to_nowhere' ? ',' + additionalJsonFields : (theme === 'rule_horror' ? ',' + additionalJsonFields : '')}
     }
     不要包含 JSON 以外的任何文本。确保内容是中文的。`;
 
@@ -174,11 +206,11 @@ app.post('/api/generate-scenario', async (req, res) => {
         let cleanContent = content.trim();
         const firstOpenBrace = cleanContent.indexOf('{');
         const lastCloseBrace = cleanContent.lastIndexOf('}');
-        
+
         if (firstOpenBrace !== -1 && lastCloseBrace !== -1) {
             cleanContent = cleanContent.substring(firstOpenBrace, lastCloseBrace + 1);
         } else if (cleanContent.startsWith('```')) {
-             // Fallback to stripping markdown if braces not found nicely (unlikely for valid JSON)
+            // Fallback to stripping markdown if braces not found nicely (unlikely for valid JSON)
             cleanContent = cleanContent.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '');
         }
 
@@ -190,6 +222,14 @@ app.post('/api/generate-scenario', async (req, res) => {
                 scenario.player_rank = playerRank;
                 scenario.inventory = [];
                 scenario.status = "正常";
+            }
+            // Ensure hints is initialized for rule_horror
+            if (theme === 'rule_horror' && !scenario.hints) {
+                scenario.hints = [];
+            }
+            // Ensure hints is initialized for rule_horror
+            if (theme === 'rule_horror' && !scenario.hints) {
+                scenario.hints = [];
             }
             res.json(scenario);
         } catch (e) {
@@ -214,32 +254,129 @@ app.post('/api/submit-action', async (req, res) => {
 
         // Path to Nowhere specific logic for NPCs and Items
         let encounterPrompt = "";
+        let npcOutputFormat = `
+             【NPC信息输出格式】
+             如果本回合有NPC出场或与玩家互动，请在JSON中返回npc_encounter数组：
+             "npc_encounter": [
+               {
+                 "name": "NPC名称",
+                 "title": "称号/职位",
+                 "attitude": "友好/中立/敌对/警惕",
+                 "description": "一句话描述该NPC的外貌或特征",
+                 "dialogue": "NPC的台词（如果有）"
+               }
+             ]
+             如果没有NPC出场，返回空数组 "npc_encounter": []
+        `;
+
         if (currentContext.theme === 'path_to_nowhere') {
             encounterPrompt = `
              【特殊判定系统】
-             1. **NPC 遭遇判定**（约15%概率触发）：
-                请根据当前场景，随机安排NPC登场。
-                - **米诺斯局长/局长（女）**：**非必定出现**。**仅当玩家陷入危急时刻（如重伤、狂厄即将失控、被FAC重重包围等绝境）时，才有概率作为“救兵”随机出现**。
-                  设定：温柔坚毅、有责任感。她拥有“枷锁”能力，可以安抚狂厄，对禁闭者有天然的亲和力与压制力。
-                - **其他NPC**：请完全基于《无期迷途》的世界观原创设计符合场景的NPC（如FAC士兵、辛迪加帮派成员、流民、其他原创禁闭者等），**不要使用游戏中已有的知名角色（如卓娅、海拉等），以免人设崩坏**。
+             1. **NPC 遭遇判定**（约25%概率触发）：
+                请根据当前场景，随机安排**有特色的原创NPC**登场。
+                
+                **NPC设计要求**：
+                - 每个NPC都要有独特的外貌特征（如伤疤、义肢、纹身、发色等）
+                - 给NPC起一个有意味的名字或绰号（如"疯犬艾克"、"锈铁老六"、"白发伊芙"）
+                - 描述NPC的态度和语气（冷漠、疯狂、狡猾、热心等）
+                
+                **NPC类型示例**：
+                - 辛迪加帮派成员：纹身满身的暴徒、精明的情报贩子
+                - 流民寨居民：衣衫褴褛的老者、机警的流浪少年
+                - FAC士兵：冷酷的执法者、腐败的军官
+                - 其他禁闭者：狂厄半失控的危险分子、隐藏身份的逃亡者
+                
+                - **米诺斯局长**：**仅在玩家生死关头（如重伤濒死、狂厄失控）时才有10%概率出现救场**。
              
              2. **道具获取判定**（约20%概率触发）：
-                如果玩家进行了探索、搜索或战胜了敌人，请给予玩家符合场景的道具（如：异方晶碎块、狂厄抑制剂、军团弩箭、地下水道地图等），并自动更新到【玩家背包】中。
+                如果玩家进行了探索或战斗，请给予符合场景的道具。
+             
+             ${npcOutputFormat}
              `;
         } else if (currentContext.theme === 'cyberpunk_novel') {
             encounterPrompt = `
              【特殊判定系统】
-             1. **NPC 遭遇判定**（约15%概率触发）：
-                请根据当前场景，随机安排NPC登场（如：公司特工、地下黑客、义体医生、赏金猎人等）。
+             1. **NPC 遭遇判定**（约25%概率触发）：
+                请设计有赛博朋克特色的原创NPC：
+                - 义体改造者（描述其改造部位）
+                - 黑客/网络入侵者（描述其装备和风格）
+                - 企业特工（冷酷、专业）
+                - 街头混混/赏金猎人
+                
+                **为每个NPC设计独特的外号和外貌特征**。
              
              2. **道具获取判定**（约20%概率触发）：
-                如果玩家进行了探索、入侵（Hacking）或战斗，请给予玩家符合场景的道具（如：加密数据盘、军用义体插件、能量电池、急救凝胶、智能手枪等），并自动更新到【玩家背包】中。
+                如果玩家进行了探索或战斗，请给予符合场景的道具。
+             
+             ${npcOutputFormat}
              `;
-        } else if (currentContext.theme === 'chinese_folklore' || currentContext.theme === 'tomb_raiding') {
-             encounterPrompt = `
+        } else if (currentContext.theme === 'chinese_folklore') {
+            encounterPrompt = `
              【特殊判定系统】
-             **道具获取判定**（约20%概率触发）：
-             如果玩家进行了探索或解谜，请给予玩家符合场景的道具（如：香灰、古铜币、玉佩、盗墓工具等），并自动更新到【玩家背包】中。
+             1. **NPC 遭遇判定**（约25%概率触发）：
+                请设计符合中式民俗恐怖氛围的NPC：
+                - 村中老人（知晓秘密的长者）
+                - 神秘戏班成员（诡异的装扮）
+                - 失踪者的亲人（悲伤或疯癫）
+                - 道士/神婆（懂得驱邪法术）
+                
+                **每个NPC都要有鲜明的特征和诡异感**。
+             
+             2. **道具获取判定**（约20%概率触发）：
+                如果玩家进行了探索或解谜，请给予符合场景的道具。
+             
+             ${npcOutputFormat}
+             `;
+        } else if (currentContext.theme === 'tomb_raiding') {
+            encounterPrompt = `
+             【特殊判定系统】
+             1. **NPC 遭遇判定**（约25%概率触发）：
+                请设计符合盗墓探险风格的NPC：
+                - 同行的摸金校尉（各有绝活）
+                - 考古队成员（学者或冒险家）
+                - 神秘的守墓人后裔
+                - 被困在墓中的探险者
+                
+                **每个NPC都要有专业背景和独特技能**。
+             
+             2. **道具获取判定**（约20%概率触发）：
+                如果玩家进行了探索或解谜，请给予符合场景的道具。
+             
+             ${npcOutputFormat}
+             `;
+        } else if (currentContext.theme === 'rule_horror') {
+            encounterPrompt = `
+             【特殊判定系统 - 规则怪谈】
+             
+             1. **规则违反判定**（核心机制）：
+                - 检查玩家的行动是否违反了已知规则
+                - 如果违反规则，必须产生严重后果（如：遭遇"它们"、陷入危险、触发死亡结局）
+                - 在描述中暗示规则的重要性
+             
+             2. **诡异NPC遭遇判定**（约30%概率触发）：
+                请设计符合规则怪谈氛围的诡异存在：
+                - 看似正常但行为诡异的"人"（可能是伪装的怪物）
+                - 困在此地的其他受害者（可能已经疯了）
+                - 知道部分规则的神秘引路人
+                - 违反规则后出现的"它"（恐怖形象）
+                
+                **NPC要有令人不安的细节描写（如：笑容僵硬、眼睛不会眨、影子方向不对等）**
+             
+             3. **线索/道具获取判定**（约25%概率触发）：
+                - 上一个受害者留下的日记/便条
+                - 补充规则的纸条
+                - 可能帮助逃脱的钥匙/工具
+             
+             4. **氛围要求**：
+                - 时刻提醒玩家规则的存在
+                - 描述中包含细微的诡异细节
+                - 营造压抑、不安的心理恐惧
+             
+             ${npcOutputFormat}
+
+             5. **规则/提示更新**：
+                如果玩家发现了新的规则或线索，请在 hints 数组中返回更新后的所有规则（包括旧的和新的）。
+                "hints": ["【规则1】...", "【规则2】...", "【新规则】..."]
              `;
         }
 
@@ -257,8 +394,6 @@ app.post('/api/submit-action', async (req, res) => {
     
     【当前游戏状态】
     场景标题：${currentContext.title}
-    场景描述：${currentContext.description}
-    上一轮结果：${currentContext.last_result}
     玩家当前状态：${currentContext.status || '未知'}
     玩家角色：${currentContext.playerRank ? currentContext.playerRank + '级禁闭者' : '普通人'}
     玩家背包：${JSON.stringify(currentContext.inventory || [])}
@@ -271,29 +406,44 @@ app.post('/api/submit-action', async (req, res) => {
     【任务目标】
     请判定这个动作的结果，并生成下一段剧情。
     
-    【写作要求】
-    1. **沉浸感**：使用第二人称（“你...”），仿佛玩家身临其境。文风要贴近原生文字游戏，简洁有力，不要过于啰嗦。
-    2. **逻辑性**：
-       - 严格判定动作的可行性。如果玩家试图做不可能的事（如徒手打破钢门），必须失败。
-       - 物品逻辑：如果动作涉及使用物品，必须检查【玩家背包】。如果没有该物品，动作失败。
-       - 如果动作是“寻找”、“搜索”等，且场景中有可能存在物品，可以给予物品（更新 inventory）。
-    3. **世界观**：严格遵守${currentContext.theme === 'path_to_nowhere' ? '《无期迷途》' : (currentContext.theme === 'chinese_folklore' ? '中式民俗恐怖' : (currentContext.theme === 'tomb_raiding' ? '盗墓探险' : '赛博朋克'))}世界观。
-       - 如果是无期迷途，玩家是禁闭者，不是局长。
-       - 如果是中式民俗，强调阴森氛围和民俗禁忌。
-       - 如果是盗墓，强调风水机关和专业术语（如“人点烛，鬼吹灯”）。
-       - 遇到危险时，根据当前世界观的逻辑应对。
+    【写作要求 - 重要】
+    1. **简洁精炼**：
+       - result_text 控制在 80-150 字以内
+       - 使用短句，每句不超过30字
+       - 删除冗余描写，保留关键信息
+       - 开头直接承接玩家动作的结果
+    2. **上下文衔接**：
+       - 开头先简要说明玩家动作的直接结果
+       - 然后描述场景变化或新发现
+    3. **沉浸感**：使用第二人称（"你..."）
+    4. **世界观**：严格遵守${currentContext.theme === 'path_to_nowhere' ? '《无期迷途》' : (currentContext.theme === 'chinese_folklore' ? '中式民俗恐怖' : (currentContext.theme === 'tomb_raiding' ? '盗墓探险' : (currentContext.theme === 'rule_horror' ? '规则怪谈（违反规则必死）' : '赛博朋克')))}世界观。
+    5. **评分系统**：如果game_over为true，请给出score(0-100), rank(S/A/B/C)和comment(评价)。
     
     ${encounterPrompt}
     
     请以 JSON 格式输出，结构如下：
     {
-      "result_text": "结果描述（请使用生动的中文描述，极具沉浸感，符合当前世界观。如果获得了物品，请在描述中提及。）",
+      "result_text": "简洁的结果描述（80-150字，直接承接玩家动作）",
       "new_options": ["选项1", "选项2", "选项3"],
-      "game_over": boolean,
-      "is_win": boolean,
-      "inventory": ["物品1", "物品2"],
-      "status": "玩家状态（如：正常、轻度侵蚀、重伤等）"
+      "game_over": false,
+      "is_win": false,
+      "inventory": ["物品1"],
+      "hints": ["规则1", "规则2"],
+      "status": "玩家状态",
+      "npc_encounter": [
+        {
+          "name": "NPC名字",
+          "title": "称号/身份",
+          "attitude": "友好/中立/敌对/警惕",
+          "description": "外貌特征描述",
+          "dialogue": "NPC说的话（可选）"
+        }
+      ],
+      "score": 0,
+      "rank": "C",
+      "comment": "评价"
     }
+    注意：npc_encounter如果没有NPC出场就返回空数组[]。
     不要包含 JSON 以外的任何文本。确保内容是中文的。`;
 
         const msg = await anthropic.messages.create({
@@ -316,21 +466,21 @@ app.post('/api/submit-action', async (req, res) => {
 
         const content = msg.content[0].text;
         console.log("Claude response length:", content.length);
-        
+
         // Robust JSON extraction
         let cleanContent = content.trim();
-        
+
         // Find the first '{' and the last '}' to extract the JSON object
         const firstOpenBrace = cleanContent.indexOf('{');
         const lastCloseBrace = cleanContent.lastIndexOf('}');
-        
+
         if (firstOpenBrace !== -1 && lastCloseBrace !== -1) {
             cleanContent = cleanContent.substring(firstOpenBrace, lastCloseBrace + 1);
         } else {
             // Fallback: Remove markdown code blocks if braces search failed (unlikely for valid JSON)
             cleanContent = cleanContent.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '');
         }
-        
+
         // Sanitize common issues
         // 1. Remove control characters that JSON.parse dislikes (except newlines/tabs)
         // cleanContent = cleanContent.replace(/[\u0000-\u0019]+/g, ""); 

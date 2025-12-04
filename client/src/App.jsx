@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import { motion, AnimatePresence } from 'framer-motion';
 import GameWindow from './components/GameWindow';
 import InputArea from './components/InputArea';
 import Timer from './components/Timer';
@@ -25,6 +26,11 @@ const THEMES = [
     id: 'tomb_raiding',
     name: '盗墓探险',
     description: '分金定穴，点烛开棺。在机关重重的古墓中寻找失落的秘宝，小心"粽子"。'
+  },
+  {
+    id: 'rule_horror',
+    name: '规则怪谈',
+    description: '你收到一封神秘信件，上面写满了奇怪的规则。记住：违反规则者，必死无疑。'
   }
 ];
 
@@ -40,13 +46,19 @@ function App() {
     history: [],
     inventory: [],
     playerRank: null,
-    status: '正常'
+    status: '正常',
+    score: 0,
+    rank: null,
+    comment: null,
+    hints: []
   });
 
   const [selectedTheme, setSelectedTheme] = useState(THEMES[0].id);
+  const [storyReadComplete, setStoryReadComplete] = useState(false);
 
   const startGame = async () => {
     setGameState(prev => ({ ...prev, loading: true, resultText: '' }));
+    setStoryReadComplete(false); // 重置阅读状态
     try {
       const response = await axios.post('/api/generate-scenario', {
         theme: selectedTheme,
@@ -63,7 +75,10 @@ function App() {
         history: [{ type: 'scenario', content: response.data }],
         inventory: response.data.inventory || [],
         playerRank: response.data.player_rank || null,
-        status: response.data.status || '正常'
+        inventory: response.data.inventory || [],
+        playerRank: response.data.player_rank || null,
+        status: response.data.status || '正常',
+        hints: response.data.hints || []
       }));
     } catch (error) {
       console.error('Failed to start game:', error);
@@ -85,11 +100,9 @@ function App() {
 
   const handleAction = async (action) => {
     if (!gameState.started) return;
-    
-    // Special handling for item usage if action string format is "使用 [Item]"
-    // No special logic needed here as the backend will interpret "使用 X" correctly
-    // but we can add UI feedback if desired.
 
+    // 重置阅读状态，等待新内容加载
+    setStoryReadComplete(false);
     setGameState(prev => ({ ...prev, loading: true }));
 
     try {
@@ -122,6 +135,14 @@ function App() {
         gameOver: result.game_over,
         inventory: result.inventory || prev.inventory,
         status: result.status || prev.status,
+        score: result.score || 0,
+        rank: result.rank || null,
+        comment: result.comment || null,
+        status: result.status || prev.status,
+        score: result.score || 0,
+        rank: result.rank || null,
+        comment: result.comment || null,
+        hints: result.hints || prev.hints,
         history: [...prev.history, { type: 'action', action, result }]
       }));
 
@@ -187,22 +208,35 @@ function App() {
         <>
           <GameWindow
             title={gameState.title}
-            description={gameState.description}
-            resultText={gameState.resultText}
+            history={gameState.history}
             playerRank={gameState.playerRank}
             inventory={gameState.inventory}
             status={gameState.status}
             onItemUse={(item) => handleAction(`使用 ${item}`)}
+            gameOver={gameState.gameOver}
+            scoreData={{ score: gameState.score, rank: gameState.rank, comment: gameState.comment }}
+            onStoryReadComplete={setStoryReadComplete}
+            hints={gameState.hints}
           />
 
-          {!gameState.gameOver && (
-            <InputArea
-              options={gameState.options}
-              onOptionSelect={handleAction}
-              onCustomAction={handleAction}
-              disabled={gameState.loading}
-            />
-          )}
+          {/* 只有当剧情阅读完毕后才显示互动按钮 */}
+          <AnimatePresence>
+            {!gameState.gameOver && storyReadComplete && !gameState.loading && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 20 }}
+                transition={{ duration: 0.3 }}
+              >
+                <InputArea
+                  options={gameState.options}
+                  onOptionSelect={handleAction}
+                  onCustomAction={handleAction}
+                  disabled={gameState.loading}
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {gameState.gameOver && (
             <div className="mt-8">
