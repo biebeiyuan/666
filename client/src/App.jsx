@@ -237,6 +237,9 @@ function App() {
             )}
           </AnimatePresence>
 
+          {/* 底部占位符，确保移动端有足够滚动空间 */}
+          <div style={{ height: '100px', width: '100%', flexShrink: 0 }}></div>
+
           {gameState.gameOver && (
             <div className="mt-8">
               <h2 className="text-2xl text-red-500 mb-4">游戏结束</h2>

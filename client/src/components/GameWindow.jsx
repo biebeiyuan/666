@@ -268,13 +268,54 @@ const GameWindow = ({
         <div className="game-layout">
             {/* 顶部：标题 + 状态 */}
             <div className="game-header">
-                <h1 className="game-title-main">{title}</h1>
+                <div className="header-top-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+                    <h1 className="game-title-main">{title}</h1>
+                    {hints && hints.length > 0 && (
+                        <div className="hints-header-btn">
+                            <button
+                                className="hints-toggle-btn-small"
+                                onClick={() => setHintsExpanded(!hintsExpanded)}
+                                style={{ fontSize: '0.8rem', padding: '0.3rem 0.6rem' }}
+                            >
+                                ⚠️ 提示 ({hints.length})
+                            </button>
+                        </div>
+                    )}
+                </div>
                 {playerRank && (
                     <div className="player-status">
                         <span className="rank-badge">{playerRank}</span>
                         <span className="status-text">{status}</span>
                     </div>
                 )}
+
+                {/* 提示面板 - 绝对定位在头部下方 */}
+                <AnimatePresence>
+                    {hintsExpanded && (
+                        <motion.div
+                            initial={{ opacity: 0, y: -10, height: 0 }}
+                            animate={{ opacity: 1, y: 0, height: 'auto' }}
+                            exit={{ opacity: 0, y: -10, height: 0 }}
+                            className="hints-panel-top"
+                            style={{
+                                background: 'rgba(0,0,0,0.9)',
+                                border: '1px solid var(--accent-color)',
+                                borderRadius: '8px',
+                                marginTop: '0.5rem',
+                                overflow: 'hidden',
+                                zIndex: 100
+                            }}
+                        >
+                            <ul className="hints-list" style={{ padding: '0.5rem', margin: 0, listStyle: 'none' }}>
+                                {hints.map((hint, idx) => (
+                                    <li key={idx} className="hint-item" style={{ padding: '0.3rem 0', borderBottom: '1px solid rgba(255,255,255,0.1)', fontSize: '0.85rem' }}>
+                                        {hint}
+                                    </li>
+                                ))}
+                            </ul>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
             </div>
 
             {/* 上方：NPC区域（固定） */}
@@ -327,45 +368,10 @@ const GameWindow = ({
                 )}
             </div>
 
-            {/* 重点提示按钮 - 固定在右下角 */}
-            {hints && hints.length > 0 && (
-                <div className="hints-button-container">
-                    <button
-                        className="hints-toggle-btn"
-                        onClick={() => setHintsExpanded(!hintsExpanded)}
-                    >
-                        ⚠️ 重点提示 ({hints.length})
-                    </button>
-                    <AnimatePresence>
-                        {hintsExpanded && (
-                            <motion.div
-                                initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                                animate={{ opacity: 1, y: 0, scale: 1 }}
-                                exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                                transition={{ duration: 0.2 }}
-                                className="hints-panel"
-                            >
-                                <div className="hints-panel-header">
-                                    <span>⚠️ 重点提示</span>
-                                    <button
-                                        className="hints-close-btn"
-                                        onClick={() => setHintsExpanded(false)}
-                                    >
-                                        ✕
-                                    </button>
-                                </div>
-                                <ul className="hints-list">
-                                    {hints.map((hint, idx) => (
-                                        <li key={idx} className="hint-item">{hint}</li>
-                                    ))}
-                                </ul>
-                            </motion.div>
-                        )}
-                    </AnimatePresence>
-                </div>
-            )}
-
             {/* 底部：背包 */}
+            {inventory && inventory.length > 0 && (
+
+                {/* 底部：背包 */ }
             {inventory && inventory.length > 0 && (
                 <div className="inventory-bar">
                     <div className="inventory-label">背包</div>
