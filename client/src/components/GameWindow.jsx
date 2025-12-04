@@ -370,9 +370,6 @@ const GameWindow = ({
 
             {/* 底部：背包 */}
             {inventory && inventory.length > 0 && (
-
-                {/* 底部：背包 */ }
-            {inventory && inventory.length > 0 && (
                 <div className="inventory-bar">
                     <div className="inventory-label">背包</div>
                     <div className="inventory-items">
