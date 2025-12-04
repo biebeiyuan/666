@@ -1,0 +1,17 @@
+{
+  "name": "claude-escape-game-root",
+  "version": "1.0.0",
+  "description": "Root package for deployment",
+  "scripts": {
+    "install-all": "npm install && cd client && npm install && cd ../server && npm install",
+    "build": "npm install && cd client && npm install && npm run build && cd ../server && npm install",
+    "start": "node server/index.js"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "dependencies": {
+    "concurrently": "^8.0.0"
+  }
+}
+
