@@ -145,80 +145,88 @@ app.post('/api/generate-scenario', async (req, res) => {
       "inventory": [],
       "status": "正常"`;
         } else if (theme === 'chinese_folklore') {
-            themeContext = `
-        世界观参考《纸嫁衣》、《烟火》等中式民俗恐怖作品。
-        背景：偏远闭塞的山村（如“封门村”、“葬铃村”），保留着诡异的封建迷信习俗。
-        核心元素：纸人、冥婚、灵堂、戏班、五行八卦、阴阳眼、厉鬼索命。
-        玩家角色：回乡奔丧的年轻人、调查失踪案的记者、或者是误入歧途的游客。
-        特殊设定：
-        1. 氛围恐怖压抑，强调心理恐惧。
-        2. 你的目标是解开谜团并逃离村庄。
-        3. **道具系统**：场景中可能包含风水道具（如：罗盘、桃木剑、符纸、朱砂）或线索物品。
-        `;
+            世界观参考《纸嫁衣》、《烟火》等中式民俗恐怖作品。
+            背景：偏远闭塞的山村（如“封门村”、“葬铃村”），保留着诡异的封建迷信习俗。
+            核心元素：
+        - ** 冥婚 / 阴亲 **：红白撞煞，诡异的婚礼仪式。
+        - ** 纸人 / 纸扎 **：替身，活人与死人的媒介。
+        - ** 五行八卦 **：解谜的关键，相生相克。
+        - ** 观落阴 **：进入阴间探查亲人状况的法术，极其危险。
+        - ** 赶尸人 **：湘西神秘职业，摇铃控尸，生人回避。
+        - ** 养虫蛊 **：苗疆秘术，以血喂养，中蛊者痛不欲生。
+
+            氛围：阴森、压抑、诡异、凄美。
+            玩家角色：误入山村的民俗学者 / 寻找失踪亲人的普通人 / 意外闯入的游客。
+            特殊设定：
+            1. 场景中充满中式恐怖元素（红灯笼、绣花鞋、棺材、灵位）。
+            2. 谜题多与民俗传说、五行八卦有关。
+            3. ** 道具 **：罗盘、朱砂、符咒、糯米、黑驴蹄子等。
             additionalJsonFields = `
       "inventory": ["老式手电筒"],
       "status": "惊魂未定"`;
         } else if (theme === 'tomb_raiding') {
-            themeContext = `
-        世界观参考《鬼吹灯》、《盗墓笔记》。
-        背景：深埋地下的古代陵墓（如"精绝古城"、"秦岭神树"）。
-        核心元素：机关陷阱、粽子（僵尸）、风水秘术、摸金校尉、冥器。
-        玩家角色：经验丰富的摸金校尉，或者是考古队的向导。
-        特殊设定：
-        1. 强调探险与解谜，需要利用风水知识和专业工具。
-        2. 你的目标是找到主墓室的宝藏并活着出去。
-        3. **道具系统**：你随身携带探险装备（如：洛阳铲、黑驴蹄子、蜡烛、糯米）。
-        `;
+            世界观参考《盗墓笔记》、《鬼吹灯》。
+            背景：深山古墓、秦岭神树、海底墓穴等。
+            核心元素：
+        - ** 风水秘术 **：寻龙分金，看山定穴。
+        - ** 机关陷阱 **：流沙、连环翻板、毒箭、悬魂梯。
+        - ** 粽子 / 尸变 **：千年古尸，刀枪不入，唯惧黑驴蹄子。
+        - ** 禁忌生物 **：尸蹩、九头蛇柏、人面鸟。
+
+            玩家角色：摸金校尉 / 发丘中郎将 / 搬山道人 / 卸岭力士的后人。
+            特殊设定：
+            1. 需要利用风水知识和专业工具（洛阳铲、黑驴蹄子）生存。
+            2. ** 代入感 **：描述要体现古墓的阴冷、幽闭和历史的厚重感。
+            3. ** 队友 **：可能会有身怀绝技的队友（如闷油瓶式的高手、贪财的胖子）。
+            4. ** 道具系统 **：你随身携带探险装备（如：洛阳铲、黑驴蹄子、蜡烛、糯米）。
             additionalJsonFields = `
       "inventory": ["洛阳铲", "黑驴蹄子", "蜡烛", "糯米"],
       "status": "状态良好"`;
         } else if (theme === 'rule_horror') {
-            themeContext = `
-        世界观参考规则类怪谈、SCP基金会、后室(Backrooms)等。
-        背景：一个看似普通但充满诡异规则的封闭空间（如：深夜便利店、废弃医院、诡异公寓、末班地铁、神秘酒店等）。
-        
-        核心元素：
-        - 必须遵守的神秘规则（违反则死）
-        - 看似正常实则扭曲的环境
-        - 伪装成普通人的"它们"
-        - 无法解释的超自然现象
-        - 时间/空间异常
-        
-        玩家角色：误入异常空间的普通人。
-        
-        特殊设定：
-        1. **规则系统**：游戏开始时，玩家会收到一份规则清单（3-5条）。这些规则必须严格遵守。
-           规则示例：
-           - "不要与穿红衣服的人说话"
-           - "听到敲门声，数到10再开门"
-           - "凌晨3点必须躲在被子里"
-           - "不要相信镜子里的自己"
-           - "如果有人问你的名字，告诉它错误的名字"
-        2. 玩家的目标是在遵守规则的前提下找到逃离的方法。
-        3. **道具系统**：场景中可能包含线索物品（如：残破的日记、神秘的符号、上一个受害者的遗物）。
-        4. 氛围要阴森诡异，强调心理恐惧和规则悬念。
-        5. 在description中必须包含3-5条清晰的规则，格式如：【规则1】xxx【规则2】xxx
-        `;
+            世界观参考“动物园规则怪谈”、“大洛山”等。
+            背景：看似正常的场所（学校、医院、游乐园），但背后隐藏着不可名状的恐怖。
+            核心元素：
+        - ** 规则纸条 **：生存的唯一指引，但可能包含谎言（“它”会篡改规则）。
+        - ** 认知污染 **：san值狂掉，看到不该看的东西。
+        - ** 心理压迫 **：没有实体怪物，只有无处不在的窥视感和违和感。
+        - ** 不可名状 **：一旦违反规则，将面临无法理解的恐怖后果。
+
+            玩家角色：普通的访客 / 学生 / 员工。
+            特殊设定：
+            1. ** 必须遵守规则 **：违反规则通常意味着死亡或比死更可怕的结局。
+            2. ** 逻辑推理 **：玩家需要从相互矛盾的规则中推断出真相。
+            3. ** 重点提示 **：场景中会发现新的规则纸条（通过hints系统更新）。
+            规则示例：
+            - "不要与穿红衣服的人说话"
+                - "听到敲门声，数到10再开门"
+                - "凌晨3点必须躲在被子里"
+                - "不要相信镜子里的自己"
+                - "如果有人问你的名字，告诉它错误的名字"
+            2. 玩家的目标是在遵守规则的前提下找到逃离的方法。
+            3. ** 道具系统 **：场景中可能包含线索物品（如：残破的日记、神秘的符号、上一个受害者的遗物）。
+            4. 氛围要阴森诡异，强调心理恐惧和规则悬念。
+            5. 在description中必须包含3 - 5条清晰的规则，格式如：【规则1】xxx【规则2】xxx
+                `;
             additionalJsonFields = `
-      "inventory": ["手机（电量47%）", "钥匙"],
-      "hints": ["【规则1】不要与穿红衣服的人说话", "【规则2】听到敲门声，数到10再开门", "【规则3】凌晨3点必须躲在被子里"],
-      "status": "心跳加速"`;
+            "inventory": ["手机（电量47%）", "钥匙"],
+                "hints": ["【规则1】不要与穿红衣服的人说话", "【规则2】听到敲门声，数到10再开门", "【规则3】凌晨3点必须躲在被子里"],
+                    "status": "心跳加速"`;
         } else {
-            themeContext = `主题：${theme || '神秘古宅'}`;
+            themeContext = `主题：${ theme || '神秘古宅' } `;
         }
 
         const prompt = `你是一个文字逃生游戏的上帝（Game Master）。
-    请创建一个新的游戏场景。
+            请创建一个新的游戏场景。
     
-    ${themeContext}
-    难度：${difficulty || '普通'}
+    ${ themeContext }
+            难度：${ difficulty || '普通' }
     
     请以 JSON 格式输出，结构如下：
-    {
-      "title": "场景标题",
-      "description": "房间或情境的开场描述（请使用生动的中文描述，极具沉浸感，符合上述世界观）",
-      "initial_options": ["选项1", "选项2", "选项3"]${theme === 'path_to_nowhere' ? ',' + additionalJsonFields : (theme === 'rule_horror' ? ',' + additionalJsonFields : '')}
-    }
+            {
+                "title": "场景标题",
+                    "description": "房间或情境的开场描述（请使用生动的中文描述，极具沉浸感，符合上述世界观）",
+                        "initial_options": ["选项1", "选项2", "选项3"]${ theme === 'path_to_nowhere' ? ',' + additionalJsonFields : (theme === 'rule_horror' ? ',' + additionalJsonFields : '') }
+            }
     不要包含 JSON 以外的任何文本。确保内容是中文的。`;
 
         const msg = await anthropic.messages.create({
@@ -239,48 +247,48 @@ app.post('/api/generate-scenario', async (req, res) => {
             ]
         });
 
-        const content = msg.content[0].text;
-        console.log("Claude response length:", content.length);
+const content = msg.content[0].text;
+console.log("Claude response length:", content.length);
 
-        // Robust JSON extraction
-        let cleanContent = content.trim();
-        const firstOpenBrace = cleanContent.indexOf('{');
-        const lastCloseBrace = cleanContent.lastIndexOf('}');
+// Robust JSON extraction
+let cleanContent = content.trim();
+const firstOpenBrace = cleanContent.indexOf('{');
+const lastCloseBrace = cleanContent.lastIndexOf('}');
 
-        if (firstOpenBrace !== -1 && lastCloseBrace !== -1) {
-            cleanContent = cleanContent.substring(firstOpenBrace, lastCloseBrace + 1);
-        } else if (cleanContent.startsWith('```')) {
-            // Fallback to stripping markdown if braces not found nicely (unlikely for valid JSON)
-            cleanContent = cleanContent.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '');
-        }
+if (firstOpenBrace !== -1 && lastCloseBrace !== -1) {
+    cleanContent = cleanContent.substring(firstOpenBrace, lastCloseBrace + 1);
+} else if (cleanContent.startsWith('```')) {
+    // Fallback to stripping markdown if braces not found nicely (unlikely for valid JSON)
+    cleanContent = cleanContent.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '');
+}
 
-        // Attempt to parse JSON to ensure validity
-        try {
-            const scenario = JSON.parse(cleanContent);
-            // Ensure player_rank is set if it's path_to_nowhere (in case LLM missed it, though we force it in prompt, better to be safe or just trust the prompt)
-            if (theme === 'path_to_nowhere' && !scenario.player_rank) {
-                scenario.player_rank = playerRank;
-                scenario.inventory = [];
-                scenario.status = "正常";
-            }
-            // Ensure hints is initialized for rule_horror
-            if (theme === 'rule_horror' && !scenario.hints) {
-                scenario.hints = [];
-            }
-            // Ensure hints is initialized for rule_horror
-            if (theme === 'rule_horror' && !scenario.hints) {
-                scenario.hints = [];
-            }
-            res.json(scenario);
-        } catch (e) {
-            console.error("Failed to parse Claude response:", content);
-            res.status(500).json({ error: 'Failed to generate valid scenario', raw: content });
-        }
+// Attempt to parse JSON to ensure validity
+try {
+    const scenario = JSON.parse(cleanContent);
+    // Ensure player_rank is set if it's path_to_nowhere (in case LLM missed it, though we force it in prompt, better to be safe or just trust the prompt)
+    if (theme === 'path_to_nowhere' && !scenario.player_rank) {
+        scenario.player_rank = playerRank;
+        scenario.inventory = [];
+        scenario.status = "正常";
+    }
+    // Ensure hints is initialized for rule_horror
+    if (theme === 'rule_horror' && !scenario.hints) {
+        scenario.hints = [];
+    }
+    // Ensure hints is initialized for rule_horror
+    if (theme === 'rule_horror' && !scenario.hints) {
+        scenario.hints = [];
+    }
+    res.json(scenario);
+} catch (e) {
+    console.error("Failed to parse Claude response:", content);
+    res.status(500).json({ error: 'Failed to generate valid scenario', raw: content });
+}
 
     } catch (error) {
-        console.error('Error generating scenario:', error);
-        res.status(500).json({ error: 'Internal server error', details: error.message });
-    }
+    console.error('Error generating scenario:', error);
+    res.status(500).json({ error: 'Internal server error', details: error.message });
+}
 });
 
 // Submit Action Endpoint
